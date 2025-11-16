@@ -12,20 +12,21 @@
   <!-- Router -->
   <script src="https://unpkg.com/react-router-dom@6.22.0/dist/umd/react-router-dom.production.min.js"></script>
 
-  <!-- React Query (UMD - fixed MIME issue) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tanstack/react-query@5.0.0/dist/umd/index.global.js"></script>
+  <!-- React Query (UMD - FORCED text/javascript) -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@tanstack/react-query@5.0.0/dist/umd/index.global.js"></script>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Lucide Icons (minified) -->
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind (PRODUCTION-READY CDN) -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
+      content: [],
       theme: {
         extend: {
           colors: {
@@ -33,7 +34,6 @@
             primary: 'hsl(262.1, 83.3%, 57.8%)',
             'muted-foreground': 'hsl(240, 3.8%, 46.1%)',
             card: 'hsl(0, 0%, 100%)',
-            muted: 'hsl(240, 4.8%, 95.9%)',
           },
           fontFamily: { jakarta: ['"Plus Jakarta Sans"', 'sans-serif'] }
         }
@@ -54,236 +54,10 @@
 <div id="root"></div>
 
 <script type="module">
-  // Wait for all libraries
   const { createRoot } = ReactDOM;
   const { BrowserRouter, Routes, Route, Link, useParams, useLocation } = ReactRouterDOM;
   const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
   const { createClient } = supabase;
   const { Home, MapPin, Shield, Sparkles, ArrowLeft, AlertCircle } = lucide;
 
-  // === SUPABASE CONFIG (UPDATE THESE) ===
-  const SUPABASE_URL = "https://YOUR-PROJECT.supabase.co";
-  const SUPABASE_ANON_KEY = "your-anon-key-here";
-  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // === API ===
-  const fetchProperties = async () => {
-    const { data } = await supabaseClient.from('properties').select('*');
-    return data || [];
-  };
-
-  const fetchPropertyById = async (id) => {
-    const { data: prop } = await supabaseClient.from('properties').select('*').eq('id', id).single();
-    const { data: rooms } = await supabaseClient.from('rooms').select('*').eq('property_id', id);
-    if (prop) prop.rooms = rooms || [];
-    return prop;
-  };
-
-  // === Components ===
-  const Button = ({ children, variant = "default", size = "default", className = "", ...props }) => {
-    const base = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50";
-    const variants = { default: "bg-primary text-white hover:bg-primary/90", ghost: "hover:bg-accent hover:text-accent-foreground" };
-    const sizes = { default: "h-9 px-4 py-2 text-sm", lg: "h-11 px-8 py-6 text-lg" };
-    return <button className={`${base} ${variants[variant]} ${sizes[size]} ${className}`} {...props}>{children}</button>;
-  };
-
-  const Card = ({ children, className = "" }) => <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>{children}</div>;
-
-  // === Pages ===
-  const NotFound = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4 p-6">
-        <div className="flex gap-2 mb-4">
-          <AlertCircle className="h-8 w-8 text-red-500" />
-          <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
-        </div>
-        <p className="text-sm text-gray-600">Did you forget to add the page to the router?</p>
-      </Card>
-    </div>
-  );
-
-  const Landing = () => (
-    <div className="min-h-screen">
-      <section className="relative min-h-[600px] md:min-h-[700px] flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543785734-4b6e564642f8?w=1400&q=80')" }}>
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 md:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 font-jakarta">Find Your Perfect Student Home</h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8">Discover comfortable, affordable accommodation designed for students like you</p>
-          <Link to="/properties"><Button size="lg" variant="outline" className="bg-white/20 backdrop-blur-md text-white border-white/30 hover:bg-white/30 px-8 py-6 text-lg">Browse Properties</Button></Link>
-        </div>
-      </section>
-
-      <section className="py-16 md:py-24 bg-background">
-        <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose Us</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center"><MapPin className="w-12 h-12 text-primary mx-auto mb-4" /><h3 className="text-xl font-semibold mb-2">Prime Locations</h3><p className="text-sm text-muted-foreground">Near universities & transport</p></div>
-            <div className="text-center"><Shield className="w-12 h-12 text-primary mx-auto mb-4" /><h3 className="text-xl font-semibold mb-2">Safe & Secure</h3><p className="text-sm text-muted-foreground">24/7 security & verified landlords</p></div>
-            <div className="text-center"><Sparkles className="w-12 h-12 text-primary mx-auto mb-4" /><h3 className="text-xl font-semibold mb-2">Modern Amenities</h3><p className="text-sm text-muted-foreground">WiFi, study spaces, furnished</p></div>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-
-  const Properties = () => {
-    const { data: properties = [], isLoading } = useQuery({ queryKey: ['properties'], queryFn: fetchProperties });
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
-          <div className="mb-8">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <Link to="/" className="hover-elevate px-2 py-1 rounded-md">Home</Link>
-              <span>/</span>
-              <span>Properties</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold mb-4">Available Properties</h1>
-            <p className="text-base text-muted-foreground">Browse our collection of student-friendly accommodations</p>
-          </div>
-
-          {isLoading ? (
-            <div className="text-center py-24"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /><p className="mt-4 text-muted-foreground">Loading...</p></div>
-          ) : properties.length === 0 ? (
-            <div className="text-center py-24"><Home className="w-16 h-16 text-muted-foreground mx-auto mb-4" /><h3 className="text-xl font-semibold mb-2">No Properties Yet</h3></div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map(p => (
-                <Link to={`/properties/${p.id}`} key={p.id} className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg hover-elevate">
-                  <img src={p.cover_image || 'https://via.placeholder.com/400x300'} alt={p.name} className="w-full h-48 object-cover" />
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">{p.name}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">{p.address}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-primary">R{p.rooms?.[0]?.monthly_rent || 'Varies'}/mo</span>
-                      <span className="text-sm text-muted-foreground">{p.rooms?.length || 0} room{p.rooms?.length > 1 ? 's' : ''}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const PropertyDetail = () => {
-    const { id } = useParams();
-    const { data: property, isLoading: pLoading } = useQuery({ queryKey: ['prop', id], queryFn: () => fetchPropertyById(id), enabled: !!id });
-    const { data: rooms = [], isLoading: rLoading } = useQuery({ queryKey: ['rooms', id], queryFn: () => supabaseClient.from('rooms').select('*').eq('property_id', id), enabled: !!id });
-    const loading = pLoading || rLoading;
-
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-center"><div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4" /><p className="text-muted-foreground">Loading...</p></div></div>;
-    if (!property) return <NotFound />;
-
-    const total = rooms.length;
-    const occupied = rooms.filter(r => r.is_occupied).length;
-    const available = total - occupied;
-    const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
-
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 md:py-12">
-          <Link to="/properties"><Button variant="ghost" size="sm" className="mb-6"><ArrowLeft className="w-4 h-4 mr-2" />Back to Properties</Button></Link>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="aspect-[4/3] overflow-hidden rounded-lg bg-muted">
-              {property.cover_image ? (
-                <img src={property.cover_image} alt={property.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-accent"><Home className="w-24 h-24 text-muted-foreground" /></div>
-              )}
-            </div>
-
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{property.name}</h1>
-              {property.address && (
-                <div className="flex items-start gap-2 mb-4">
-                  <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
-                  <p className="text-base text-muted-foreground">{property.address}</p>
-                </div>
-              )}
-              {property.description && <p className="text-base leading-relaxed mb-6">{property.description}</p>}
-
-              {total > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <Card className="p-4"><div className="text-sm text-muted-foreground mb-1">Total Rooms</div><div className="text-2xl font-bold">{total}</div></Card>
-                  <Card className="p-4"><div className="text-sm text-muted-foreground mb-1">Available</div><div className="text-2xl font-bold text-primary">{available}</div></Card>
-                  <Card className="p-4"><div className="text-sm text-muted-foreground mb-1">Occupied</div><div className="text-2xl font-bold">{occupied}</div></Card>
-                  <Card className="p-4"><div className="text-sm text-muted-foreground mb-1">Occupancy</div><div className="text-2xl font-bold">{rate}%</div></Card>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div>
-            <h2 className="text-2xl font-semibold mb-4">{total > 0 ? 'Available Rooms' : 'No Rooms Listed'}</h2>
-            {total === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No room information available for this property yet.</p>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {rooms.map(room => (
-                  <Card key={room.id} className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold text-lg">Room {room.room_number}</h3>
-                        <p className="text-sm text-muted-foreground">{room.room_type}</p>
-                      </div>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${room.is_occupied ? 'bg-gray-200 text-gray-700' : 'bg-primary text-white'}`}>
-                        {room.is_occupied ? 'Occupied' : 'Available'}
-                      </span>
-                    </div>
-                    {room.monthly_rent && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-medium">R{Number(room.monthly_rent).toFixed(2)}/month</span>
-                      </div>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const Header = () => {
-    const { pathname } = useLocation();
-    return (
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary font-jakarta">Student Nest SA</h1>
-          <nav className="space-x-6">
-            <Link to="/" className={`font-medium ${pathname === '/' ? 'text-primary' : 'text-gray-600'}`}>Home</Link>
-            <Link to="/properties" className={`font-medium ${pathname.startsWith('/properties') ? 'text-primary' : 'text-gray-600'}`}>Properties</Link>
-          </nav>
-        </div>
-      </header>
-    );
-  };
-
-  // === App ===
-  const App = () => (
-    <QueryClientProvider client={new QueryClient()}>
-      <BrowserRouter>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:id" element={<PropertyDetail />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-
-  const root = createRoot(document.getElementById('root'));
-  root.render(<App />);
-</script>
-</body>
-</html>
+ 
