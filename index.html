@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Nest SA</title>
 
-  <!-- React + Router + Query + Supabase + Icons -->
+  <!-- React + Router + Supabase + Icons -->
   <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.development.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/react-router-dom@6/dist/umd/react-router-dom.development.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tanstack/react-query@5/dist/umd/index.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tanstack/react-query@5"></script>
   <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -35,7 +35,7 @@
 
   <style>
     * { font-family: 'Inter', sans-serif; }
-    .font-jakarta { font-family: '"Plus Jakarta Sans"', sans-serif; }
+    .font-jakarta { font-family: '"Plus Jakarta Sans"', 'sans-serif; }
     .min-h-screen { min-height: 100vh; }
     .bg-background { background-color: hsl(0, 0%, 98%); }
     .hover-elevate:hover { transform: translateY(-1px); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -67,8 +67,10 @@ const fetchPropertyById = async (id) => {
 };
 
 // === Query Client ===
-const { QueryClient, QueryClientProvider, useQuery } = ReactQuery;
-const queryClient = new QueryClient();
+const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 1000 * 60 } }
+});
 
 // === Components ===
 const { Link, useParams } = ReactRouterDOM;
