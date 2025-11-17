@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Student Nest SA</title>
 
-  <!-- React (production) -->
+  <!-- React -->
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
 
@@ -21,7 +21,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
-  <!-- TAILWIND CSS: PREBUILT (NO CDN WARNING) -->
+  <!-- Tailwind (prebuilt) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -71,7 +71,6 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     return prop;
   };
 
-  // === Components ===
   const Button = ({ children, variant = "default", size = "default", className = "", ...props }) => {
     const base = "inline-flex items-center justify-center rounded-md font-medium transition-colors";
     const variants = { default: "bg-primary text-white hover:bg-primary/90", ghost: "hover:bg-gray-100" };
@@ -81,7 +80,6 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const Card = ({ children, className = "" }) => <div className={`rounded-lg border bg-white shadow-sm ${className}`}>{children}</div>;
 
-  // === Pages ===
   const NotFound = () => (
     <div className="min-h-screen flex items-center justify-center">
       <Card className="max-w-md mx-4 p-6">
