@@ -21,7 +21,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
-  <!-- Tailwind CSS (Prebuilt) -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -45,31 +45,26 @@
 <div id="root"></div>
 
 <script type="module">
-  // === GLOBALS (ONLY ONE TIME) ===
+  // === GLOBALS ===
   const { createRoot } = ReactDOM;
   const { BrowserRouter, Routes, Route, Link, useParams, useLocation } = ReactRouterDOM;
   const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
-  const { createClient } = supabase;  // ← ONLY ONE
   const { Home, MapPin, Shield, Sparkles, ArrowLeft, AlertCircle } = lucide;
 
-  // === SUPABASE (YOUR REAL KEYS) ===
-  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co";  // ← TRIMMED SPACE
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc";
+  // === SUPABASE (FIXED: NO DESTRUCTURING, CORRECT URL PLACEHOLDER) ===
+  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co";     // ← CHANGE THIS
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc";                     // ← CHANGE THIS
 
-  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // === TEST CONNECTION (OPTIONAL - REMOVE LATER) ===
-  // async function testConnection() {
-  //   const { data, error } = await supabaseClient.from("test_table").select("*");
-  //   if (error) console.error("Supabase Error:", error);
-  //   else console.log("Connected:", data);
-  // }
-  // testConnection();
+  // CORRECT: Use global `supabase.createClient` directly
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // === API ===
   const fetchProperties = async () => {
     const { data, error } = await supabaseClient.from('properties').select('*');
-    if (error) console.error('Properties error:', error);
+    if (error) {
+      console.error('Properties fetch error:', error);
+      return [];
+    }
     return data || [];
   };
 
@@ -118,16 +113,19 @@
   );
 
   const Properties = () => {
-    const { data: properties = [], isLoading, error } = useQuery({ queryKey: ['properties'], queryFn: fetchProperties });
-    
+    const { data: properties = [], isLoading, error } = useQuery({ 
+      queryKey: ['properties'], 
+      queryFn: fetchProperties 
+    });
+
     return (
       <div className="min-h-screen bg-background py-12">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold mb-8">Available Properties</h1>
-          
-          {isLoading && <p className="text-center py-12">Loading...</p>}
-          {error && <p className="text-center text-red-600 py-12">Error: {error.message}</p>}
-          {!isLoading && !error && properties.length === 0 && <p className="text-center py-12">No properties yet.</p>}
+
+          {isLoading && <p className="text-center py-12">Loading properties...</p>}
+          {error && <p className="text-center text-red-600 py-12">Error: {error.message || 'Failed to load'}</p>}
+          {!isLoading && !error && properties.length === 0 && <p className="text-center py-12">No properties found. Add some in Supabase!</p>}
 
           {!isLoading && !error && properties.length > 0 && (
             <div className="grid md:grid-cols-3 gap-6">
