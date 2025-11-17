@@ -15,13 +15,13 @@
   <!-- TanStack Query -->
   <script src="https://cdn.jsdelivr.net/npm/@tanstack/react-query@5.0.0/dist/umd/index.global.js"></script>
 
-  <!-- Supabase (ONLY ONE) -->
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS (Prebuilt) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -51,26 +51,21 @@
   const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
   const { Home, MapPin, Shield, Sparkles, ArrowLeft, AlertCircle } = lucide;
 
-  // === SUPABASE (FIXED: NO DESTRUCTURING, CORRECT URL PLACEHOLDER) ===
-  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co";     // ← CHANGE THIS
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc";                     // ← CHANGE THIS
-
-  // CORRECT: Use global `supabase.createClient` directly
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // === SUPABASE SETUP (ONLY ONE) ===
+  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co"; // replace with your URL
+  const SUPABASE_ANON_KEY = "YOUR_REAL_ANON_KEY_HERE"; // replace with your anon key
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // === API ===
   const fetchProperties = async () => {
-    const { data, error } = await supabaseClient.from('properties').select('*');
-    if (error) {
-      console.error('Properties fetch error:', error);
-      return [];
-    }
+    const { data, error } = await supabase.from('properties').select('*');
+    if (error) console.error('Properties error:', error);
     return data || [];
   };
 
   const fetchPropertyById = async (id) => {
-    const { data: prop, error: propError } = await supabaseClient.from('properties').select('*').eq('id', id).single();
-    const { data: rooms, error: roomError } = await supabaseClient.from('rooms').select('*').eq('property_id', id);
+    const { data: prop, error: propError } = await supabase.from('properties').select('*').eq('id', id).single();
+    const { data: rooms, error: roomError } = await supabase.from('rooms').select('*').eq('property_id', id);
     if (propError) console.error('Property error:', propError);
     if (roomError) console.error('Rooms error:', roomError);
     if (prop) prop.rooms = rooms || [];
@@ -113,19 +108,16 @@
   );
 
   const Properties = () => {
-    const { data: properties = [], isLoading, error } = useQuery({ 
-      queryKey: ['properties'], 
-      queryFn: fetchProperties 
-    });
+    const { data: properties = [], isLoading, error } = useQuery({ queryKey: ['properties'], queryFn: fetchProperties });
 
     return (
       <div className="min-h-screen bg-background py-12">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold mb-8">Available Properties</h1>
 
-          {isLoading && <p className="text-center py-12">Loading properties...</p>}
-          {error && <p className="text-center text-red-600 py-12">Error: {error.message || 'Failed to load'}</p>}
-          {!isLoading && !error && properties.length === 0 && <p className="text-center py-12">No properties found. Add some in Supabase!</p>}
+          {isLoading && <p className="text-center py-12">Loading...</p>}
+          {error && <p className="text-center text-red-600 py-12">Error: {error.message}</p>}
+          {!isLoading && !error && properties.length === 0 && <p className="text-center py-12">No properties yet.</p>}
 
           {!isLoading && !error && properties.length > 0 && (
             <div className="grid md:grid-cols-3 gap-6">
@@ -152,8 +144,8 @@
 
   const PropertyDetail = () => {
     const { id } = useParams();
-    const { data: property, isLoading, error } = useQuery({ 
-      queryKey: ['prop', id], 
+    const { data: property, isLoading, error } = useQuery({
+      queryKey: ['prop', id],
       queryFn: () => fetchPropertyById(id),
       enabled: !!id
     });
