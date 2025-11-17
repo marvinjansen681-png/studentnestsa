@@ -44,18 +44,28 @@
 
 <div id="root"></div>
 
-<script type="module">
-  const { createRoot } = ReactDOM;
-  const { BrowserRouter, Routes, Route, Link, useParams, useLocation } = ReactRouterDOM;
-  const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
- const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  const { Home, MapPin, Shield, Sparkles, ArrowLeft, AlertCircle } = lucide;
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // 1️⃣ Your Supabase Project Credentials
+  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co ";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc";
 
-  // === SUPABASE SETUP (PASTE YOUR REAL KEYS HERE) ===
-const SUPABASE_URL="https:// gokhrdqtgukxjydfjjwo.supabase.co ";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc...";
+  // 2️⃣ Create Client (Correct for CDN usage)
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // 3️⃣ Example Test Query (optional)
+  async function testConnection() {
+    const { data, error } = await supabaseClient.from("test_table").select("*");
+    if (error) {
+      console.error("Supabase Error:", error);
+    } else {
+      console.log("Supabase Connected:", data);
+    }
+  }
+
+  testConnection(); // remove this if unnecessary
+</script>
+
 
 
   const fetchProperties = async () => {
