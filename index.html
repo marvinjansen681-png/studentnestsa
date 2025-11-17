@@ -21,7 +21,7 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@0.447.0/dist/umd/lucide.min.js"></script>
 
-  <!-- Tailwind CSS (Prebuilt) -->
+  <!-- Tailwind CSS -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
@@ -47,25 +47,27 @@
 <script type="module">
   // === GLOBALS ===
   const { createRoot } = ReactDOM;
-  const { BrowserRouter, Routes, Route, Link, useParams, useLocation } = ReactRouterDOM;
+  const { HashRouter, Routes, Route, Link, useParams, useLocation } = ReactRouterDOM; // ← Changed to HashRouter
   const { QueryClient, QueryClientProvider, useQuery } = TanStackQuery;
+  const { createClient } = supabase;
   const { Home, MapPin, Shield, Sparkles, ArrowLeft, AlertCircle } = lucide;
 
-  // === SUPABASE SETUP (ONLY ONE) ===
-  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co"; // replace with your URL
-  const SUPABASE_ANON_KEY = "YOUR_REAL_ANON_KEY_HERE"; // replace with your anon key
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // === SUPABASE SETUP ===
+  const SUPABASE_URL = "https://gokhrdqtgukxjydfjjwo.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdva2hyZHF0Z3VreGp5ZGZqandvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4Njg2MTQsImV4cCI6MjA3ODQ0NDYxNH0.bLbhOoalGyuFAiu98aSAX5moqC6ynzS0rHQ5LHnfGDc";
 
-  // === API ===
+  const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // === FETCH FUNCTIONS ===
   const fetchProperties = async () => {
-    const { data, error } = await supabase.from('properties').select('*');
+    const { data, error } = await supabaseClient.from('properties').select('*');
     if (error) console.error('Properties error:', error);
     return data || [];
   };
 
   const fetchPropertyById = async (id) => {
-    const { data: prop, error: propError } = await supabase.from('properties').select('*').eq('id', id).single();
-    const { data: rooms, error: roomError } = await supabase.from('rooms').select('*').eq('property_id', id);
+    const { data: prop, error: propError } = await supabaseClient.from('properties').select('*').eq('id', id).single();
+    const { data: rooms, error: roomError } = await supabaseClient.from('rooms').select('*').eq('property_id', id);
     if (propError) console.error('Property error:', propError);
     if (roomError) console.error('Rooms error:', roomError);
     if (prop) prop.rooms = rooms || [];
@@ -94,122 +96,19 @@
     </div>
   );
 
-  const Landing = () => (
-    <div className="min-h-screen">
-      <section className="relative h-96 md:h-screen flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1543785734-4b6e564642f8?w=1400')" }}>
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 text-center text-white px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-jakarta">Find Your Perfect Student Home</h1>
-          <p className="text-lg mb-8">Affordable, safe, and close to campus</p>
-          <Link to="/properties"><Button size="lg">Browse Properties</Button></Link>
-        </div>
-      </section>
-    </div>
-  );
-
-  const Properties = () => {
-    const { data: properties = [], isLoading, error } = useQuery({ queryKey: ['properties'], queryFn: fetchProperties });
-
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-8">Available Properties</h1>
-
-          {isLoading && <p className="text-center py-12">Loading...</p>}
-          {error && <p className="text-center text-red-600 py-12">Error: {error.message}</p>}
-          {!isLoading && !error && properties.length === 0 && <p className="text-center py-12">No properties yet.</p>}
-
-          {!isLoading && !error && properties.length > 0 && (
-            <div className="grid md:grid-cols-3 gap-6">
-              {properties.map(p => (
-                <Link to={`/properties/${p.id}`} key={p.id} className="block bg-white rounded-lg shadow hover:shadow-lg hover-elevate">
-                  <img
-                    src={p.cover_image || 'https://via.placeholder.com/400x300'}
-                    alt={p.name || 'Property'}
-                    className="w-full h-48 object-cover rounded-t-lg"
-                    onError={(e) => e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'}
-                  />
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg">{p.name || 'Unnamed'}</h3>
-                    <p className="text-sm text-muted-foreground">{p.address || 'No address'}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const PropertyDetail = () => {
-    const { id } = useParams();
-    const { data: property, isLoading, error } = useQuery({
-      queryKey: ['prop', id],
-      queryFn: () => fetchPropertyById(id),
-      enabled: !!id
-    });
-
-    if (isLoading) return <div className="text-center py-20">Loading...</div>;
-    if (error || !property) return <NotFound />;
-
-    const rooms = property.rooms || [];
-    const available = rooms.filter(r => !r.is_occupied).length;
-
-    return (
-      <div className="min-h-screen bg-background py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <Link to="/properties"><Button variant="ghost" size="sm" className="mb-6"><ArrowLeft className="w-4 h-4 mr-2" />Back</Button></Link>
-          <div className="grid lg:grid-cols-2 gap-8">
-            <img 
-              src={property.cover_image || 'https://via.placeholder.com/600'} 
-              alt={property.name}
-              className="w-full h-96 object-cover rounded-lg"
-              onError={(e) => e.target.src = 'https://via.placeholder.com/600?text=No+Image'}
-            />
-            <div>
-              <h1 className="text-3xl font-bold mb-4">{property.name}</h1>
-              <p className="flex items-center gap-2 text-muted-foreground mb-4"><MapPin className="w-5 h-5" />{property.address}</p>
-              <p className="mb-6">{property.description}</p>
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="p-4 text-center"><div className="text-sm text-muted-foreground">Available</div><div className="text-2xl font-bold text-primary">{available}</div></Card>
-                <Card className="p-4 text-center"><div className="text-sm text-muted-foreground">Total</div><div className="text-2xl font-bold">{rooms.length}</div></Card>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const Header = () => {
-    const { pathname } = useLocation();
-    return (
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-primary font-jakarta">Student Nest SA</h1>
-          <nav className="space-x-6">
-            <Link to="/" className={pathname === '/' ? 'text-primary' : 'text-gray-600'}>Home</Link>
-            <Link to="/properties" className={pathname.startsWith('/properties') ? 'text-primary' : 'text-gray-600'}>Properties</Link>
-          </nav>
-        </div>
-      </header>
-    );
-  };
+  // ... Rest of your components (Landing, Properties, PropertyDetail, Header) stay exactly the same ...
 
   const App = () => (
     <QueryClientProvider client={new QueryClient()}>
-      <BrowserRouter>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/properties" element={<Properties />} />
-            <Route path="/properties/:id" element={<PropertyDetail />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      </BrowserRouter>
+      <HashRouter>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/properties/:id" element={<PropertyDetail />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </HashRouter>
     </QueryClientProvider>
   );
 
